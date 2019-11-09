@@ -25,6 +25,7 @@ type t =
   | Var(ErrStatus.t, VarErrStatus.t, Var.t)
   | NumLit(ErrStatus.t, int)
   | BoolLit(ErrStatus.t, bool)
+  | StringLit(ErrStatus.t, string)
   | ListNil(ErrStatus.t)
   /* inner nodes */
   | Parenthesized(t)
