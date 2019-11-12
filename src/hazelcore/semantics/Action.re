@@ -155,7 +155,7 @@ let rec perform_ty = (a: t, zty: ZTyp.t): result(ZTyp.t) =>
   | (
       _,
       CursorT(OnText(_), _) |
-      CursorT(Staging(_), Hole | Unit | Num | Bool | OpSeq(_, _)),
+      CursorT(Staging(_), Hole | Unit | Num | Bool | String | OpSeq(_, _)),
     ) =>
     // invalid cursor position
     Failed
@@ -241,7 +241,7 @@ let rec perform_ty = (a: t, zty: ZTyp.t): result(ZTyp.t) =>
     ZTyp.is_after(zty) ? Succeeded(ZTyp.place_before(uty)) : Failed
   | (Delete, CursorT(_, Hole as uty)) =>
     ZTyp.is_before(zty) ? Succeeded(ZTyp.place_after(uty)) : Failed
-  | (Backspace | Delete, CursorT(_, Unit | Num | Bool)) =>
+  | (Backspace | Delete, CursorT(_, Unit | Num | Bool | String)) =>
     Succeeded(ZTyp.place_before(Hole))
   /* ( _ <|)   ==>   ( _| ) */
   /* ... + [k-2] + [k-1] <|+ [k] + ...   ==>   ... + [k-2] + [k-1]| + [k] + ... */

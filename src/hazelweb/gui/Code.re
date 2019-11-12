@@ -53,6 +53,7 @@ and sbox_shape =
   | Unit
   | Num
   | Bool
+  | String
   | List
   | Triv
   | EmptyHoleInstance(
@@ -592,6 +593,7 @@ let snode_attrs =
         | Unit => [Attr.classes(["Unit", ...base_clss])]
         | Num => [Attr.classes(["Num", ...base_clss])]
         | Bool => [Attr.classes(["Bool", ...base_clss])]
+        | String => [Attr.classes(["String", ...base_clss])]
         | List => [Attr.classes(["List", ...base_clss])]
         | Triv => [Attr.classes(["Triv", ...base_clss])]
         | EmptyHoleInstance(u, i, _sigma) => [
@@ -1784,6 +1786,18 @@ let snode_of_Bool = (~steps, ()) =>
     ],
   );
 
+let snode_of_String = (~steps, ()) =>
+  mk_SBox(
+    ~steps,
+    ~shape=String,
+    [
+      mk_SLine(
+        ~steps_of_first_sword=steps,
+        [SToken(mk_SDelim(~index=0, "String"))],
+      ),
+    ],
+  );
+
 let snode_of_Num = (~steps, ()) =>
   mk_SBox(
     ~steps,
@@ -1814,6 +1828,7 @@ let rec snode_of_typ = (~steps: CursorPath.steps=[], uty: UHTyp.t): snode =>
   | Unit => snode_of_Unit(~steps, ())
   | Num => snode_of_Num(~steps, ())
   | Bool => snode_of_Bool(~steps, ())
+  | String => snode_of_String(~steps, ())
   | Parenthesized(body) =>
     let sbody = snode_of_typ(~steps=steps @ [0], body);
     snode_of_Parenthesized(~steps, sbody);
@@ -2637,6 +2652,7 @@ let precedence_ty = (ty: HTyp.t): int =>
   switch (ty) {
   | Num
   | Bool
+  | String
   | Hole
   | Unit
   | List(_) => precedence_const
@@ -2771,6 +2787,7 @@ let rec snode_of_htyp =
   switch (ty) {
   | Hole => snode_of_EmptyHole(~steps, "?")
   | Bool => snode_of_Bool(~steps, ())
+  | String => snode_of_String(~steps, ())
   | Num => snode_of_Num(~steps, ())
   | Unit => snode_of_Unit(~steps, ())
   | List(ty1) =>

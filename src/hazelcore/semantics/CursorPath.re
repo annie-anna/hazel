@@ -191,6 +191,7 @@ let rec before_typ = (~steps=[], ty: UHTyp.t): t =>
   | Hole
   | Unit
   | Num
+  | String
   | Bool => (steps, OnDelim(0, Before))
   | Parenthesized(_)
   | List(_) => (steps, OnDelim(0, Before))
@@ -253,6 +254,7 @@ let rec follow_ty_and_place_cursor =
     | Hole
     | Unit
     | Num
+    | String
     | Bool => None
     | Parenthesized(uty1) =>
       switch (x) {
@@ -873,6 +875,7 @@ let rec holes_uty =
   | Unit => holes
   | Num => holes
   | Bool => holes
+  | String => holes
   | Parenthesized(uty1) => holes |> holes_uty(uty1, [0, ...rev_steps])
   | List(uty1) => holes |> holes_uty(uty1, [0, ...rev_steps])
   | OpSeq(skel, seq) =>
@@ -1376,6 +1379,7 @@ let rec holes_zty = (zty: ZTyp.t, rev_steps: rev_steps): zhole_list => {
     }
   | CursorT(_, Unit)
   | CursorT(_, Num)
+  | CursorT(_, String)
   | CursorT(_, Bool) => {
       holes_before: [],
       hole_selected: None,

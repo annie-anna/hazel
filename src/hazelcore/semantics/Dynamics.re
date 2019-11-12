@@ -1930,6 +1930,7 @@ module Evaluator = {
     | Bool
     | Num
     | Unit
+    | String
     | Arrow(Hole, Hole)
     | Sum(Hole, Hole)
     | Prod(Hole, Hole)
