@@ -207,6 +207,7 @@ let rec before_pat = (~steps=[], p: UHPat.t): t =>
   | ListNil(_) => (steps, OnDelim(0, Before))
   | Var(_, _, _)
   | NumLit(_, _)
+  | StringLit(_, _)
   | BoolLit(_, _) => (steps, OnText(0))
   | Parenthesized(_)
   | Inj(_, _, _) => (steps, OnDelim(0, Before))
@@ -233,6 +234,7 @@ and before_exp = (~steps=[], e: UHExp.t): t =>
   | ListNil(_) => (steps, OnDelim(0, Before))
   | Var(_, _, _)
   | NumLit(_, _)
+  | StringLit(_, _)
   | BoolLit(_, _) => (steps, OnText(0))
   | Lam(_, _, _, _)
   | Inj(_, _, _)
@@ -323,6 +325,7 @@ let rec follow_pat_and_place_cursor =
     | (_, Var(_, _, _))
     | (_, NumLit(_, _))
     | (_, BoolLit(_, _))
+    | (_, StringLit(_, _))
     | (_, ListNil(_)) => None
     /* inner nodes */
     | (0, Parenthesized(p1)) =>
@@ -476,6 +479,7 @@ and follow_exp_and_place_cursor =
     | (_, Var(_, _, _))
     | (_, NumLit(_, _))
     | (_, BoolLit(_, _))
+    | (_, StringLit(_, _))
     | (_, ListNil(_)) => None
     /* inner nodes */
     | (0, Parenthesized(block)) =>
@@ -902,6 +906,7 @@ let rec holes_pat =
   | Var(InHole(_, u), _, _)
   | NumLit(InHole(_, u), _)
   | BoolLit(InHole(_, u), _)
+  | StringLit(InHole(_, u), _)
   | ListNil(InHole(_, u))
   | Inj(InHole(_, u), _, _) => [
       (PatHole(u), rev_steps |> List.rev |> append(before_pat(p))),
@@ -915,6 +920,7 @@ let rec holes_pat =
   | Wild(NotInHole) => holes
   | NumLit(NotInHole, _) => holes
   | BoolLit(NotInHole, _) => holes
+  | StringLit(NotInHole, _) => holes
   | ListNil(NotInHole) => holes
   | Parenthesized(p1) => holes |> holes_pat(p1, [0, ...rev_steps])
   | Inj(NotInHole, _, p1) => holes |> holes_pat(p1, [0, ...rev_steps])
@@ -1005,6 +1011,7 @@ and holes_exp =
     |> holes_of_var_err_exp(e, var_err, rev_steps)
   | NumLit(err, _)
   | BoolLit(err, _)
+  | StringLit(err, _)
   | ListNil(err) => holes_of_err_exp(e, err, rev_steps, holes)
   | Parenthesized(block) => holes_block(block, [0, ...rev_steps], holes)
   | OpSeq(skel, seq) =>
@@ -1431,6 +1438,7 @@ let rec holes_zpat = (zp: ZPat.t, rev_steps: rev_steps): zhole_list => {
   | CursorP(_, Var(_, _, _))
   | CursorP(_, NumLit(_, _))
   | CursorP(_, BoolLit(_, _))
+  | CursorP(_, StringLit(_, _))
   | CursorP(_, ListNil(_)) => {
       holes_before: [],
       hole_selected: None,
@@ -1584,6 +1592,7 @@ and holes_ze = (ze: ZExp.t, rev_steps: rev_steps): zhole_list =>
   | CursorE(_, Var(_, _, _))
   | CursorE(_, NumLit(_, _))
   | CursorE(_, BoolLit(_, _))
+  | CursorE(_, StringLit(_, _))
   | CursorE(_, ListNil(_)) => {
       holes_before: [],
       hole_selected: None,
@@ -1987,7 +1996,9 @@ and prune_trivial_suffix_block__line = (~steps_of_first_line, line) =>
 and prune_trivial_suffix_block__exp = (~steps_of_first_line, e) =>
   switch (e, steps_of_first_line) {
   | (
-      EmptyHole(_) | Var(_, _, _) | NumLit(_, _) | BoolLit(_, _) | ListNil(_) |
+      EmptyHole(_) | Var(_, _, _) | NumLit(_, _) | BoolLit(_, _) |
+      StringLit(_, _) |
+      ListNil(_) |
       ApPalette(_, _, _, _),
       _,
     )

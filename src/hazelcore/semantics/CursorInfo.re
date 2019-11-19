@@ -317,6 +317,7 @@ let rec _ana_cursor_found_pat =
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Inj(InHole(TypeInconsistent, _), _, _)
   | OpSeq(BinOp(InHole(TypeInconsistent, _), _, _, _), _) =>
@@ -330,6 +331,7 @@ let rec _ana_cursor_found_pat =
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _))
   | Inj(InHole(WrongLength, _), _, _) => None
   /* not in hole */
@@ -340,6 +342,8 @@ let rec _ana_cursor_found_pat =
   | ListNil(NotInHole) => Some((PatAnalyzed(ty), Pat(p), ctx))
   | NumLit(NotInHole, _) => Some((PatAnaSubsumed(ty, Num), Pat(p), ctx))
   | BoolLit(NotInHole, _) => Some((PatAnaSubsumed(ty, Bool), Pat(p), ctx))
+  | StringLit(NotInHole, _) =>
+    Some((PatAnaSubsumed(ty, String), Pat(p), ctx))
   | Inj(NotInHole, _, _) => Some((PatAnalyzed(ty), Pat(p), ctx))
   | Parenthesized(p1) =>
     switch (_ana_cursor_found_pat(ctx, p1, ty)) {
@@ -826,6 +830,7 @@ and _ana_cursor_found_exp =
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Lam(InHole(TypeInconsistent, _), _, _, _)
   | Inj(InHole(TypeInconsistent, _), _, _)
@@ -840,6 +845,7 @@ and _ana_cursor_found_exp =
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _)) => None
   | Lam(InHole(WrongLength, _), _, _, _)
   | Inj(InHole(WrongLength, _), _, _)
@@ -865,6 +871,7 @@ and _ana_cursor_found_exp =
   | EmptyHole(_)
   | Var(NotInHole, NotInVarHole, _)
   | NumLit(NotInHole, _)
+  | StringLit(NotInHole, _)
   | BoolLit(NotInHole, _) =>
     switch (Statics.syn_exp(ctx, e)) {
     | None => None

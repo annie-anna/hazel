@@ -25,6 +25,7 @@ module DHPat = {
     | Var(Var.t)
     | NumLit(int)
     | BoolLit(bool)
+    | StringLit(string)
     | Inj(InjSide.t, t)
     | ListNil
     | Cons(t, t)
@@ -48,6 +49,7 @@ module DHPat = {
     | Wild
     | NumLit(_)
     | BoolLit(_)
+    | StringLit(_)
     | Triv
     | ListNil
     | Keyword(_, _, _) => false
@@ -69,6 +71,7 @@ module DHPat = {
     | Var(InHole(TypeInconsistent as reason, u), _, _)
     | NumLit(InHole(TypeInconsistent as reason, u), _)
     | BoolLit(InHole(TypeInconsistent as reason, u), _)
+    | StringLit(InHole(TypeInconsistent as reason, u), _)
     | ListNil(InHole(TypeInconsistent as reason, u))
     | Inj(InHole(TypeInconsistent as reason, u), _, _) =>
       let p' = UHPat.set_err_status_t(NotInHole, p);
@@ -84,6 +87,7 @@ module DHPat = {
     | Var(InHole(WrongLength, _), _, _)
     | NumLit(InHole(WrongLength, _), _)
     | BoolLit(InHole(WrongLength, _), _)
+    | StringLit(InHole(WrongLength, _), _)
     | ListNil(InHole(WrongLength, _))
     | Inj(InHole(WrongLength, _), _, _) => DoesNotExpand
     | EmptyHole(u) =>
@@ -102,6 +106,7 @@ module DHPat = {
       Expands(Var(x), Hole, ctx, delta);
     | NumLit(NotInHole, n) => Expands(NumLit(n), Num, ctx, delta)
     | BoolLit(NotInHole, b) => Expands(BoolLit(b), Bool, ctx, delta)
+    | StringLit(NotInHole, s) => Expands(StringLit(s), String, ctx, delta)
     | ListNil(NotInHole) => Expands(ListNil, List(Hole), ctx, delta)
     | Parenthesized(p1) => syn_expand(ctx, delta, p1)
     | OpSeq(skel, seq) => syn_expand_skel(ctx, delta, skel, seq)
@@ -181,6 +186,7 @@ module DHPat = {
     | Var(InHole(TypeInconsistent as reason, u), _, _)
     | NumLit(InHole(TypeInconsistent as reason, u), _)
     | BoolLit(InHole(TypeInconsistent as reason, u), _)
+    | StringLit(InHole(TypeInconsistent as reason, u), _)
     | ListNil(InHole(TypeInconsistent as reason, u))
     | Inj(InHole(TypeInconsistent as reason, u), _, _) =>
       let p' = UHPat.set_err_status_t(NotInHole, p);
@@ -197,6 +203,7 @@ module DHPat = {
     | Var(InHole(WrongLength, _), _, _)
     | NumLit(InHole(WrongLength, _), _)
     | BoolLit(InHole(WrongLength, _), _)
+    | StringLit(InHole(WrongLength, _), _)
     | ListNil(InHole(WrongLength, _))
     | Inj(InHole(WrongLength, _), _, _) => DoesNotExpand
     | EmptyHole(u) =>
@@ -213,6 +220,7 @@ module DHPat = {
       Expands(Var(x), ty, ctx, delta);
     | Wild(NotInHole) => Expands(Wild, ty, ctx, delta)
     | NumLit(NotInHole, _)
+    | StringLit(NotInHole, _)
     | BoolLit(NotInHole, _) => syn_expand(ctx, delta, p)
     | ListNil(NotInHole) =>
       switch (HTyp.matched_list(ty)) {
@@ -429,6 +437,7 @@ module DHExp = {
       | Lam(DHPat.t, HTyp.t, t)
       | Ap(t, t)
       | BoolLit(bool)
+      | StringLit(string)
       | NumLit(int)
       | BinNumOp(bin_num_op, t, t)
       | And(t, t)
@@ -459,6 +468,7 @@ module DHExp = {
     | Ap(_, _) => "Ap"
     | BoolLit(_) => "BoolLit"
     | NumLit(_) => "NumLit"
+    | StringLit(_) => "StringLit"
     | BinNumOp(_, _, _) => "BinNumOp"
     | And(_, _) => "And"
     | Or(_, _) => "Or"
@@ -544,6 +554,7 @@ module DHExp = {
       Ap(d3, d4);
     | BoolLit(_)
     | NumLit(_)
+    | StringLit(_)
     | ListNil(_)
     | Triv => d2
     | Cons(d3, d4) =>
@@ -662,6 +673,15 @@ module DHExp = {
     | (NumLit(_), Cast(d, Num, Hole)) => matches(dp, d)
     | (NumLit(_), Cast(d, Hole, Num)) => matches(dp, d)
     | (NumLit(_), _) => DoesNotMatch
+    | (StringLit(s1), StringLit(s2)) =>
+      if (s1 == s2) {
+        Matches(Environment.empty);
+      } else {
+        DoesNotMatch;
+      }
+    | (StringLit(_), Cast(d, String, Hole)) => matches(dp, d)
+    | (StringLit(_), Cast(d, Hole, String)) => matches(dp, d)
+    | (StringLit(_), _) => DoesNotMatch
     | (Inj(side1, dp), Inj(_, side2, d)) =>
       switch (side1, side2) {
       | (L, L)
@@ -760,6 +780,7 @@ module DHExp = {
     | Or(_, _) => Indet
     | BoolLit(_) => DoesNotMatch
     | NumLit(_) => DoesNotMatch
+    | StringLit(_) => DoesNotMatch
     | ListNil(_) => DoesNotMatch
     | Cons(_, _) => DoesNotMatch
     | Pair(_, _) => DoesNotMatch
@@ -813,6 +834,7 @@ module DHExp = {
     | And(_, _)
     | Or(_, _) => Indet
     | BoolLit(_) => DoesNotMatch
+    | StringLit(_) => DoesNotMatch
     | NumLit(_) => DoesNotMatch
     | Inj(_, _, _) => DoesNotMatch
     | ListNil(_) => DoesNotMatch
@@ -863,6 +885,7 @@ module DHExp = {
     | Or(_, _) => Indet
     | BoolLit(_) => DoesNotMatch
     | NumLit(_) => DoesNotMatch
+    | StringLit(_) => DoesNotMatch
     | Inj(_, _, _) => DoesNotMatch
     | ListNil(_) => DoesNotMatch
     | Pair(_, _) => DoesNotMatch
@@ -973,6 +996,7 @@ module DHExp = {
     | Var(InHole(TypeInconsistent as reason, u), _, _)
     | NumLit(InHole(TypeInconsistent as reason, u), _)
     | BoolLit(InHole(TypeInconsistent as reason, u), _)
+    | StringLit(InHole(TypeInconsistent as reason, u), _)
     | ListNil(InHole(TypeInconsistent as reason, u))
     | Lam(InHole(TypeInconsistent as reason, u), _, _, _)
     | Inj(InHole(TypeInconsistent as reason, u), _, _)
@@ -994,6 +1018,7 @@ module DHExp = {
     | Var(InHole(WrongLength, _), _, _)
     | NumLit(InHole(WrongLength, _), _)
     | BoolLit(InHole(WrongLength, _), _)
+    | StringLit(InHole(WrongLength, _), _)
     | ListNil(InHole(WrongLength, _))
     | Lam(InHole(WrongLength, _), _, _, _)
     | Inj(InHole(WrongLength, _), _, _)
@@ -1027,6 +1052,7 @@ module DHExp = {
       Expands(d, Hole, delta);
     | NumLit(NotInHole, n) => Expands(NumLit(n), Num, delta)
     | BoolLit(NotInHole, b) => Expands(BoolLit(b), Bool, delta)
+    | StringLit(NotInHole, s) => Expands(StringLit(s), String, delta)
     | ListNil(NotInHole) =>
       let elt_ty = HTyp.Hole;
       Expands(ListNil(elt_ty), List(elt_ty), delta);
@@ -1233,6 +1259,7 @@ module DHExp = {
     | Var(InHole(TypeInconsistent as reason, u), _, _)
     | NumLit(InHole(TypeInconsistent as reason, u), _)
     | BoolLit(InHole(TypeInconsistent as reason, u), _)
+    | StringLit(InHole(TypeInconsistent as reason, u), _)
     | ListNil(InHole(TypeInconsistent as reason, u))
     | Lam(InHole(TypeInconsistent as reason, u), _, _, _)
     | Inj(InHole(TypeInconsistent as reason, u), _, _)
@@ -1251,6 +1278,7 @@ module DHExp = {
     | Var(InHole(WrongLength, _), _, _)
     | NumLit(InHole(WrongLength, _), _)
     | BoolLit(InHole(WrongLength, _), _)
+    | StringLit(InHole(WrongLength, _), _)
     | ListNil(InHole(WrongLength, _))
     | Lam(InHole(WrongLength, _), _, _, _)
     | Inj(InHole(WrongLength, _), _, _)
@@ -1365,6 +1393,7 @@ module DHExp = {
     | Var(NotInHole, NotInVarHole, _)
     | BoolLit(NotInHole, _)
     | NumLit(NotInHole, _)
+    | StringLit(NotInHole, _)
     | ApPalette(NotInHole, _, _, _) =>
       /* subsumption */
       syn_expand_exp(ctx, delta, e)
@@ -1640,6 +1669,7 @@ module DHExp = {
     | Var(_)
     | NumLit(_)
     | BoolLit(_)
+    | StringLit(_)
     | ListNil
     | Triv => (dp, hii)
     | EmptyHole(u, _) =>
@@ -1681,6 +1711,7 @@ module DHExp = {
     | BoundVar(_)
     | BoolLit(_)
     | NumLit(_)
+    | StringLit(_)
     | ListNil(_)
     | Triv => (d, hii)
     | Let(dp, d1, d2) =>
@@ -1768,6 +1799,7 @@ module DHExp = {
     | BoundVar(_)
     | BoolLit(_)
     | NumLit(_)
+    | StringLit(_)
     | ListNil(_)
     | Triv => (d, hii)
     | Let(dp, d1, d2) =>
@@ -2003,6 +2035,7 @@ module Evaluator = {
     | ListNil(_)
     | BoolLit(_)
     | NumLit(_)
+    | StringLit(_)
     | Triv => BoxedValue(d)
     | And(d1, d2) =>
       switch (evaluate(d1)) {

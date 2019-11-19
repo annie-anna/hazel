@@ -24,6 +24,7 @@ let rec syn_pat =
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Inj(InHole(TypeInconsistent, _), _, _) =>
     let p' = UHPat.set_err_status_t(NotInHole, p);
@@ -35,6 +36,7 @@ let rec syn_pat =
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _))
   | Inj(InHole(WrongLength, _), _, _) => None
   /* not in hole */
@@ -48,6 +50,7 @@ let rec syn_pat =
     )
   | NumLit(NotInHole, _) => Some((Num, ctx))
   | BoolLit(NotInHole, _) => Some((Bool, ctx))
+  | StringLit(NotInHole, _) => Some((String, ctx))
   | ListNil(NotInHole) => Some((List(Hole), ctx))
   | Inj(NotInHole, inj_side, p1) =>
     switch (syn_pat(ctx, p1)) {
@@ -147,6 +150,7 @@ and ana_pat = (ctx: Contexts.t, p: UHPat.t, ty: HTyp.t): option(Contexts.t) =>
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Inj(InHole(TypeInconsistent, _), _, _) =>
     let p' = UHPat.set_err_status_t(NotInHole, p);
@@ -158,6 +162,7 @@ and ana_pat = (ctx: Contexts.t, p: UHPat.t, ty: HTyp.t): option(Contexts.t) =>
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _))
   | Inj(InHole(WrongLength, _), _, _) => None
   /* not in hole */
@@ -167,6 +172,7 @@ and ana_pat = (ctx: Contexts.t, p: UHPat.t, ty: HTyp.t): option(Contexts.t) =>
     Var.check_valid(x, Some(Contexts.extend_gamma(ctx, (x, ty))))
   | Wild(NotInHole) => Some(ctx)
   | NumLit(NotInHole, _)
+  | StringLit(NotInHole, _)
   | BoolLit(NotInHole, _) =>
     switch (syn_pat(ctx, p)) {
     | None => None
@@ -444,6 +450,7 @@ and syn_exp = (ctx: Contexts.t, e: UHExp.t): option(HTyp.t) =>
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Lam(InHole(TypeInconsistent, _), _, _, _)
   | Inj(InHole(TypeInconsistent, _), _, _)
@@ -457,6 +464,7 @@ and syn_exp = (ctx: Contexts.t, e: UHExp.t): option(HTyp.t) =>
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _))
   | Lam(InHole(WrongLength, _), _, _, _)
   | Inj(InHole(WrongLength, _), _, _)
@@ -467,6 +475,7 @@ and syn_exp = (ctx: Contexts.t, e: UHExp.t): option(HTyp.t) =>
   | Var(NotInHole, InVarHole(_, _), _) => Some(Hole)
   | NumLit(NotInHole, _) => Some(Num)
   | BoolLit(NotInHole, _) => Some(Bool)
+  | StringLit(NotInHole, _) => Some(String)
   | ListNil(NotInHole) => Some(List(Hole))
   | Lam(NotInHole, p, ann, block) =>
     let ty1 =
@@ -657,6 +666,7 @@ and ana_exp = (ctx: Contexts.t, e: UHExp.t, ty: HTyp.t): option(unit) =>
   | Var(InHole(TypeInconsistent, _), _, _)
   | NumLit(InHole(TypeInconsistent, _), _)
   | BoolLit(InHole(TypeInconsistent, _), _)
+  | StringLit(InHole(TypeInconsistent, _), _)
   | ListNil(InHole(TypeInconsistent, _))
   | Lam(InHole(TypeInconsistent, _), _, _, _)
   | Inj(InHole(TypeInconsistent, _), _, _)
@@ -670,6 +680,7 @@ and ana_exp = (ctx: Contexts.t, e: UHExp.t, ty: HTyp.t): option(unit) =>
   | Var(InHole(WrongLength, _), _, _)
   | NumLit(InHole(WrongLength, _), _)
   | BoolLit(InHole(WrongLength, _), _)
+  | StringLit(InHole(WrongLength, _), _)
   | ListNil(InHole(WrongLength, _))
   | Lam(InHole(WrongLength, _), _, _, _)
   | Inj(InHole(WrongLength, _), _, _)
@@ -683,6 +694,7 @@ and ana_exp = (ctx: Contexts.t, e: UHExp.t, ty: HTyp.t): option(unit) =>
     }
   | Var(NotInHole, _, _)
   | NumLit(NotInHole, _)
+  | StringLit(NotInHole, _)
   | BoolLit(NotInHole, _) =>
     let e' = UHExp.set_err_status_t(NotInHole, e);
     switch (syn_exp(ctx, e')) {
@@ -978,6 +990,7 @@ let rec syn_fix_holes_pat =
     (p_nih, Hole, ctx, u_gen);
   | NumLit(_, _) => (p_nih, Num, ctx, u_gen)
   | BoolLit(_, _) => (p_nih, Bool, ctx, u_gen)
+  | StringLit(_, _) => (p_nih, String, ctx, u_gen)
   | ListNil(_) => (p_nih, List(Hole), ctx, u_gen)
   | Parenthesized(p) =>
     let (p, ty, ctx, u_gen) =
@@ -1093,6 +1106,7 @@ and ana_fix_holes_pat =
     let ctx = Contexts.extend_gamma(ctx, (x, ty));
     (p_nih, ctx, u_gen);
   | NumLit(_, _)
+  | StringLit(_, _)
   | BoolLit(_, _) =>
     let (p', ty', ctx, u_gen) =
       syn_fix_holes_pat(ctx, u_gen, ~renumber_empty_holes, p);
@@ -1476,6 +1490,7 @@ and syn_fix_holes_exp =
     };
   | NumLit(_, _) => (e_nih, Num, u_gen)
   | BoolLit(_, _) => (e_nih, Bool, u_gen)
+  | StringLit(_, _) => (e_nih, String, u_gen)
   | ListNil(_) => (e_nih, List(Hole), u_gen)
   | Parenthesized(block) =>
     let (block, ty, u_gen) =
@@ -1651,6 +1666,7 @@ and ana_fix_holes_exp =
     }
   | Var(_, _, _)
   | NumLit(_, _)
+  | StringLit(_, _)
   | BoolLit(_, _) =>
     let (e, ty', u_gen) =
       syn_fix_holes_exp(ctx, u_gen, ~renumber_empty_holes, e);

@@ -44,6 +44,7 @@ and sbox_shape =
   | Wild
   | NumLit
   | BoolLit
+  | StringLit
   | ListNil
   | Lam
   | Inj
@@ -584,6 +585,7 @@ let snode_attrs =
         | Wild => [Attr.classes(["Wild", ...base_clss])]
         | NumLit => [Attr.classes(["NumLit", ...base_clss])]
         | BoolLit => [Attr.classes(["BoolLit", ...base_clss])]
+        | StringLit => [Attr.classes(["StringLit", ...base_clss])]
         | ListNil => [Attr.classes(["ListNil", ...base_clss])]
         | Lam => [Attr.classes(["Lam", ...base_clss])]
         | Inj => [Attr.classes(["Inj", ...base_clss])]
@@ -1443,6 +1445,16 @@ let snode_of_BoolLit =
     ],
   );
 
+let snode_of_StringLit =
+    (~ap_err_status=NotInApHole, ~err, ~steps, s: string): snode =>
+  mk_SBox(
+    ~ap_err_status,
+    ~err,
+    ~steps,
+    ~shape=StringLit,
+    [mk_SLine(~steps_of_first_sword=steps, [SToken(mk_SText(s))])],
+  );
+
 let snode_of_ListNil = (~ap_err_status=NotInApHole, ~err, ~steps, ()): snode =>
   mk_SBox(
     ~ap_err_status,
@@ -1904,6 +1916,7 @@ let rec snode_of_pat =
     snode_of_Var(~ap_err_status, ~err, ~var_err, ~steps, x)
   | NumLit(err, n) => snode_of_NumLit(~ap_err_status, ~err, ~steps, n)
   | BoolLit(err, b) => snode_of_BoolLit(~ap_err_status, ~err, ~steps, b)
+  | StringLit(err, s) => snode_of_StringLit(~ap_err_status, ~err, ~steps, s)
   | ListNil(err) => snode_of_ListNil(~ap_err_status, ~err, ~steps, ())
   | Inj(err, side, body) =>
     let sbody = snode_of_pat(~steps=steps @ [0], body);
@@ -2046,6 +2059,7 @@ and snode_of_exp =
     snode_of_Var(~ap_err_status, ~err, ~var_err, ~steps, x)
   | NumLit(err, n) => snode_of_NumLit(~err, ~steps, n)
   | BoolLit(err, b) => snode_of_BoolLit(~err, ~steps, b)
+  | StringLit(err, s) => snode_of_StringLit(~err, ~steps, s)
   | ListNil(err) => snode_of_ListNil(~err, ~steps, ())
   /* inner nodes */
   | Lam(err, arg, ann, body) =>
@@ -2682,6 +2696,7 @@ let precedence_dhpat = (dp: DHPat.t) =>
   | Var(_)
   | NumLit(_)
   | BoolLit(_)
+  | StringLit(_)
   | Inj(_, _)
   | Triv
   | ListNil
@@ -2696,6 +2711,7 @@ let rec precedence_dhexp = (d: DHExp.t) =>
   | Keyword(_, _, _, _)
   | BoolLit(_)
   | NumLit(_)
+  | StringLit(_)
   | ListNil(_)
   | Inj(_, _, _)
   | Pair(_, _)
@@ -2881,6 +2897,7 @@ let rec snode_of_dhpat =
   | Var(x) => snode_of_Var(~err, ~var_err=NotInVarHole, ~steps, x)
   | BoolLit(b) => snode_of_BoolLit(~err, ~steps, b)
   | NumLit(n) => snode_of_NumLit(~err, ~steps, n)
+  | StringLit(s) => snode_of_StringLit(~err, ~steps, s)
   | Triv => snode_of_Triv(~err, ~steps)
   | ListNil => snode_of_ListNil(~err, ~steps, ())
   | Inj(side, dp1) =>
@@ -2949,6 +2966,7 @@ let rec snode_of_dhexp =
   | Triv => snode_of_Triv(~err, ~steps)
   | BoolLit(b) => snode_of_BoolLit(~err, ~steps, b)
   | NumLit(n) => snode_of_NumLit(~err, ~steps, n)
+  | StringLit(s) => snode_of_StringLit(~err, ~steps, s)
   | ListNil(_) => snode_of_ListNil(~err, ~steps, ())
   | BoundVar(x) => snode_of_Var(~err, ~var_err=NotInVarHole, ~steps, x)
   | FreeVar(u, _, _, x) =>
