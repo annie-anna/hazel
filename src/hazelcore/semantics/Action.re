@@ -104,6 +104,7 @@ type shape =
   /* type shapes */
   | SNum
   | SBool
+  | SString
   | SList
   /* expression shapes */
   | SAsc
@@ -349,6 +350,9 @@ let rec perform_ty = (a: t, zty: ZTyp.t): result(ZTyp.t) =>
   | (Construct(SNum), CursorT(_, Hole)) =>
     Succeeded(ZTyp.place_after(Num))
   | (Construct(SNum), CursorT(_, _)) => Failed
+  | (Construct(SString), CursorT(_, Hole)) =>
+    Succeeded(ZTyp.place_after(Num))
+  | (Construct(SString), CursorT(_, _)) => Failed
   | (Construct(SBool), CursorT(_, Hole)) =>
     Succeeded(ZTyp.place_after(Bool))
   | (Construct(SBool), CursorT(_, _)) => Failed
@@ -1925,6 +1929,7 @@ let rec syn_perform_pat =
   | (Construct(SApPalette(_)), _)
   | (Construct(SNum), _)
   | (Construct(SBool), _)
+  | (Construct(SString), _)
   | (Construct(SList), _)
   | (Construct(SAsc), _)
   | (Construct(SLet), _)
@@ -2621,6 +2626,7 @@ and ana_perform_pat =
   | (Construct(SApPalette(_)), _)
   | (Construct(SNum), _)
   | (Construct(SBool), _)
+  | (Construct(SString), _)
   | (Construct(SList), _)
   | (Construct(SAsc), _)
   | (Construct(SLet), _)
@@ -4609,6 +4615,7 @@ and syn_perform_exp =
   | (Construct(SVar(x, cursor)), CursorE(_, EmptyHole(_)))
   | (Construct(SVar(x, cursor)), CursorE(_, Var(_, _, _)))
   | (Construct(SVar(x, cursor)), CursorE(_, NumLit(_, _)))
+  | (Construct(SVar(x, cursor)), CursorE(_, StringLit(_, _)))
   | (Construct(SVar(x, cursor)), CursorE(_, BoolLit(_, _))) =>
     if (String.equal(x, "true")) {
       Succeeded((
@@ -4674,6 +4681,7 @@ and syn_perform_exp =
   | (Construct(SNumLit(n, cursor)), CursorE(_, EmptyHole(_)))
   | (Construct(SNumLit(n, cursor)), CursorE(_, NumLit(_, _)))
   | (Construct(SNumLit(n, cursor)), CursorE(_, BoolLit(_, _)))
+  | (Construct(SNumLit(n, cursor)), CursorE(_, StringLit(_, _)))
   | (Construct(SNumLit(n, cursor)), CursorE(_, Var(_, _, _))) =>
     Succeeded((E(CursorE(cursor, NumLit(NotInHole, n))), Num, u_gen))
   | (Construct(SNumLit(_, _)), CursorE(_, _)) => Failed
@@ -5109,6 +5117,7 @@ and syn_perform_exp =
   /* Invalid actions at expression level */
   | (Construct(SNum), _)
   | (Construct(SBool), _)
+  | (Construct(SString), _)
   | (Construct(SList), _)
   | (Construct(SWild), _) => Failed
   }
@@ -6939,6 +6948,7 @@ and ana_perform_exp =
   /* Invalid actions at expression level */
   | (Construct(SNum), _)
   | (Construct(SBool), _)
+  | (Construct(SString), _)
   | (Construct(SList), _)
   | (Construct(SWild), _) => Failed
   }
@@ -7025,6 +7035,7 @@ let can_perform =
   | Construct(SOp(_))
   | Construct(SNum) /* TODO enrich cursor_info to allow simplifying these type cases */
   | Construct(SBool) /* TODO enrich cursor_info to allow simplifying these type cases */
+  | Construct(SString)
   | MoveTo(_)
   | MoveToBefore(_)
   | MoveToNextHole
